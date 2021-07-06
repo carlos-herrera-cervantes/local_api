@@ -33,6 +33,7 @@
     "@nestjs/swagger": "^4.8.1",
     "bcrypt": "^5.0.1",
     "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.1",
     "dayjs": "^1.10.4",
     "firebase-admin": "^9.6.0",
     "firebase-queue": "^1.6.1",

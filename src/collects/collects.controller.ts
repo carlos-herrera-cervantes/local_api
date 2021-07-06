@@ -10,24 +10,37 @@ import {
   UseInterceptors,
   HttpCode,
   Headers,
-  Logger
+  Logger,
+  Query
 } from '@nestjs/common';
+import {
+  ApiProduces,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiTags,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiUnprocessableEntityResponse
+} from '@nestjs/swagger';
 import { CollectMoney } from './schemas/collect.schema';
 import { CreateCollectDto } from './dto/create-collect.dto';
 import { UpdateCollectDto } from './dto/update-collect.dto';
+import { ListAllCollectDto, SingleCollectDto } from './dto/list-all-collect.dto';
 import { CollectMoneyService } from './collects.service';
 import { AuthService } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../base/enums/role.enum';
-import { CustomQueryParams, QueryParams } from '../base/entities/query-params.entity';
+import { QueryParamsListDto } from '../base/dto/base-list.dto';
 import { MongoDBFilter } from '../base/entities/mongodb-filter.entity';
 import { Paginator, IPaginatorData } from '../base/entities/paginator.entity';
 import { TransformInterceptor } from '../base/interceptors/response.interceptor';
-import { ApiTags } from '@nestjs/swagger';
 import { successCreatedCollectEvent } from './logger/index';
 
 @ApiTags('Collects')
+@ApiConsumes('application/json')
+@ApiProduces('application/json')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(TransformInterceptor)
 @Controller('/api/v1/collects')
@@ -40,8 +53,11 @@ export class CollectsController {
   ) {}
 
   @Get()
+  @ApiOkResponse({ type: ListAllCollectDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.SuperAdmin, Role.StationAdmin)
-  async getAllAsync(@CustomQueryParams() params: QueryParams): Promise<IPaginatorData<CollectMoney>> {
+  async getAllAsync(@Query() params: QueryParamsListDto): Promise<IPaginatorData<CollectMoney>> {
     const filter = new MongoDBFilter(params)
       .setCriteria()
       .setPagination()
@@ -57,10 +73,13 @@ export class CollectsController {
   }
 
   @Get('me')
+  @ApiOkResponse({ type: ListAllCollectDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.All)
   async getMeAsync(
     @Headers('authorization') authorization: string,
-    @CustomQueryParams() params: QueryParams
+    @Query() params: QueryParamsListDto
   ): Promise<IPaginatorData<CollectMoney>> {
     const token = authorization?.split(' ').pop();
     const { sub } = await this.authService.getPayload(token);
@@ -81,12 +100,20 @@ export class CollectsController {
   }
 
   @Get(':id')
+  @ApiOkResponse({ type: SingleCollectDto, isArray: false })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.SuperAdmin, Role.StationAdmin)
-  async getByIdAsync(@Param() params): Promise<CollectMoney> {
-    return await this.collectsService.getByIdAsync(params.id);
+  async getByIdAsync(@Param('id') id: string): Promise<CollectMoney> {
+    return await this.collectsService.getByIdAsync(id);
   }
 
   @Post()
+  @ApiOkResponse({ type: SingleCollectDto, isArray: false, status: 201 })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiUnprocessableEntityResponse({ description: 'Invalid model' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.SuperAdmin, Role.StationAdmin)
   async createAsync(@Body() collect: CreateCollectDto): Promise<CollectMoney> {
     const created = await this.collectsService.createAsync(collect);
@@ -96,15 +123,24 @@ export class CollectsController {
   }
 
   @Patch(':id')
+  @ApiOkResponse({ type: SingleCollectDto, isArray: false })
+  @ApiUnprocessableEntityResponse({ description: 'Invalid model' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.SuperAdmin)
-  async updateByIdAsync(@Param() params, @Body() collect: UpdateCollectDto): Promise<CollectMoney> {
-    return await this.collectsService.updateOneByIdAsync(params.id, collect);
+  async updateByIdAsync(@Param('id') id: string, @Body() collect: UpdateCollectDto): Promise<CollectMoney> {
+    return await this.collectsService.updateOneByIdAsync(id, collect);
   }
 
   @Delete(':id')
+  @ApiOkResponse({ isArray: false, status: 204, description: 'No content' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.SuperAdmin)
   @HttpCode(204)
-  async deleteByIdAsync(@Param() params): Promise<CollectMoney> {
-    return await this.collectsService.deleteOneByIdAsync(params.id);
+  async deleteByIdAsync(@Param('id') id: string): Promise<CollectMoney> {
+    return await this.collectsService.deleteOneByIdAsync(id);
   }
 }

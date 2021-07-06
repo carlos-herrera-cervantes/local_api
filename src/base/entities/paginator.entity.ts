@@ -1,15 +1,9 @@
-import { QueryParams } from './query-params.entity';
-
-interface IPaginator {
-  page: number,
-  pageSize: number,
-  remainingDocuments: number,
-  totalDocuments: number
-}
+import { QueryParamsListDto } from '../dto/base-list.dto';
+import { PagerDto } from '../dto/pager.dto';
 
 export interface IPaginatorData<T> {
   docs: T[],
-  paginator: IPaginator
+  paginator: PagerDto
 }
 
 export class Paginator<T> {
@@ -17,17 +11,25 @@ export class Paginator<T> {
   /**
    * Initializes a new Paginator instance
    * @param {MongooseModel} data Documents of collection
-   * @param {QueryParams} queryParams Parameters object model
+   * @param {QueryParamsListDto} queryParams Parameters object model
    * @param {Number} totalDocuments Total documents of collection
    */
-  constructor(private data: T[], private queryParams: QueryParams, private totalDocuments: number) {}
+  constructor(
+    private data: T[],
+    private queryParams: QueryParamsListDto,
+    private totalDocuments: number
+  ) {}
 
   /**
    * Creates the pagination object
    * @returns Pagination object
    */
   getPaginator(): IPaginatorData<T> {
-    const { page, pageSize } = this.queryParams;
+    let { page, pageSize } = this.queryParams;
+
+    if (!page) page = 1;
+    if (!pageSize) pageSize = 10;
+
     const take = page * pageSize;
 
     return {

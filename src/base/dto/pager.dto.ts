@@ -3,15 +3,15 @@ import { ApiProperty } from "@nestjs/swagger";
 export class PagerDto {
 
   @ApiProperty()
-  public page: number;
+  page: number;
 
   @ApiProperty()
-  public pageSize: number;
+  pageSize: number;
 
   @ApiProperty()
-  public remainingDocuments: number;
+  remainingDocuments: number;
 
   @ApiProperty()
-  public totalDocuments: number;
+  totalDocuments: number;
 
 }

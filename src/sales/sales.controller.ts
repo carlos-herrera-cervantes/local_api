@@ -8,10 +8,22 @@ import {
   UseGuards,
   UseInterceptors,
   Headers,
-  HttpCode
+  HttpCode,
+  Query
 } from '@nestjs/common';
+import {
+  ApiProduces,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiTags,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiUnprocessableEntityResponse
+} from '@nestjs/swagger';
 import { Sale } from './schemas/sale.schema';
 import { UpdateSaleDto } from './dto/update-sale.dto';
+import { SingleSaleDto, ListAllSaleDto } from './dto/list-all-sale.dto';
 import { SalesService } from './sales.service';
 import { ShiftsService } from '../shifts/shifts.service';
 import { AuthService } from '../auth/auth.service';
@@ -30,13 +42,14 @@ import { ExistsPaymentGuard } from '../paymentMethods/guards/exists-payment.guar
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../base/enums/role.enum';
 import { MongoDBFilter } from '../base/entities/mongodb-filter.entity';
-import { CustomQueryParams, QueryParams } from '../base/entities/query-params.entity';
+import { QueryParamsListDto } from '../base/dto/base-list.dto';
 import { PaymentTransaction } from '../paymentTransactions/schemas/paymentTransaction.schema';
 import { Paginator, IPaginatorData } from '../base/entities/paginator.entity';
 import { TransformInterceptor } from '../base/interceptors/response.interceptor';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Sales')
+@ApiConsumes('application/json')
+@ApiProduces('application/json')
 @UseGuards(JwtAuthGuard)
 @UseGuards(AssignShiftGuard)
 @UseInterceptors(TransformInterceptor)
@@ -53,8 +66,11 @@ export class SalesController {
   ) {}
 
   @Get()
+  @ApiOkResponse({ type: ListAllSaleDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.SuperAdmin, Role.StationAdmin)
-  async getAllAsync(@CustomQueryParams() params: QueryParams): Promise<IPaginatorData<Sale>> {
+  async getAllAsync(@Query() params: QueryParamsListDto): Promise<IPaginatorData<Sale>> {
     const filter = new MongoDBFilter(params)
       .setCriteria()
       .setPagination()
@@ -71,10 +87,13 @@ export class SalesController {
   }
 
   @Get('me')
+  @ApiOkResponse({ type: ListAllSaleDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.All)
   async getMeAsync(
     @Headers('authorization') authorization: string,
-    @CustomQueryParams() params: QueryParams
+    @Query() params: QueryParamsListDto
   ): Promise<IPaginatorData<Sale>> {
     const token = authorization?.split(' ').pop();
     const { sub } = await this.authService.getPayload(token);
@@ -96,19 +115,27 @@ export class SalesController {
   }
 
   @Get(':id')
+  @ApiOkResponse({ type: SingleSaleDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.SuperAdmin, Role.StationAdmin)
   @UseGuards(ExistsSaleGuard)
-  async getByIdAsync(@Param() params): Promise<Sale> {
-    return await this.salesService.getByIdAsync(params.id);
+  async getByIdAsync(@Param('id') id: string): Promise<Sale> {
+    return await this.salesService.getByIdAsync(id);
   }
 
   @Get('positions/:id')
+  @ApiOkResponse({ type: ListAllSaleDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.All)
   @UseGuards(ExistsPositionGuard)
   async getPendingsAsync(
     @Headers('authorization') authorization : string,
     @Param('id') id: string,
-    @CustomQueryParams() params: QueryParams
+    @Query() params: QueryParamsListDto
   ): Promise<IPaginatorData<Sale>> {
     const token = authorization?.split(' ').pop();
     const { sub } = await this.authService.getPayload(token);
@@ -146,13 +173,22 @@ export class SalesController {
   }
 
   @Patch(':id')
+  @ApiOkResponse({ type: SingleSaleDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiUnprocessableEntityResponse({ description: 'Invalid model' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.SuperAdmin, Role.StationAdmin)
   @UseGuards(ExistsSaleGuard)
-  async updateByIdAsync(@Param() params, @Body() sale: UpdateSaleDto): Promise<Sale> {
-    return await this.salesService.updateOneByIdAsync(params.id, sale);
+  async updateByIdAsync(@Param('id') id: string, @Body() sale: UpdateSaleDto): Promise<Sale> {
+    return await this.salesService.updateOneByIdAsync(id, sale);
   }
 
   @Patch(':id/products')
+  @ApiOkResponse({ type: SingleSaleDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.All)
   @UseGuards(ExistsSaleGuard)
   @UseGuards(AddProductGuard)
@@ -161,6 +197,10 @@ export class SalesController {
   }
 
   @Patch(':id/calculate-total')
+  @ApiOkResponse({ type: SingleSaleDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.All)
   @UseGuards(ExistsSaleGuard)
   @UseGuards(CalculateTotalGuard)
@@ -171,6 +211,11 @@ export class SalesController {
   }
 
   @Patch(':id/pay')
+  @ApiOkResponse({ type: SingleSaleDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiUnprocessableEntityResponse({ description: 'Invalid model' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.All)
   @UseGuards(ExistsSaleGuard)
   @UseGuards(PayGuard)
@@ -178,22 +223,26 @@ export class SalesController {
   async payAsync(
     @Param('id') id: string,
     @Body() body,
-    @CustomQueryParams() params: QueryParams
+    @Query('partial') partial: boolean
   ): Promise<Sale> {
     const sale = await this.salesService.getByIdAsync(id) as Sale;
     const payment = {
-      quantity: params?.partial ? body?.quantity : sale?.total,
+      quantity: partial ? body?.quantity : sale?.total,
       paymentMethod: body?.paymentMethodId
     } as PaymentTransaction;
     const created = await this.paymentTransactionService.createAsync(payment);
 
     sale.paymentTransaction.push(created._id);
-    params?.partial ? false : sale.status = '203';
+    partial ? false : sale.status = '203';
 
     return await this.salesService.saveAsync(sale);
   }
 
   @Patch(':id/close')
+  @ApiOkResponse({ type: SingleSaleDto, isArray: false })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.All)
   @UseGuards(ExistsSaleGuard)
   @UseGuards(CloseGuard)
@@ -226,10 +275,14 @@ export class SalesController {
   }
 
   @Delete(':id')
+  @ApiOkResponse({ isArray: false, status: 204, description: 'No content' })
+  @ApiForbiddenResponse({ description: 'Forbidden resource' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.SuperAdmin, Role.StationAdmin)
   @UseGuards(ExistsSaleGuard)
   @HttpCode(204)
-  async deleteByIdAsync(@Param() params): Promise<Sale> {
-    return await this.salesService.deleteOneByIdAsync(params.id);
+  async deleteByIdAsync(@Param('id') id: string): Promise<Sale> {
+    return await this.salesService.deleteOneByIdAsync(id);
   }
 }

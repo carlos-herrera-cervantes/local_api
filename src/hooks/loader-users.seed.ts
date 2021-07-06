@@ -15,7 +15,7 @@ export class LoaderUsers implements OnApplicationBootstrap {
 
   async onApplicationBootstrap(): Promise<void> {
     try {
-      if (this.configService.get<string>('ENVIRONMENT') !== 'test') {
+      if (this.configService.get<string>('NODE_ENV') !== 'test') {
         const totalUsers = await this.usersService.countDocsAsync();
   
         return totalUsers > 0 ? this.logger.log({

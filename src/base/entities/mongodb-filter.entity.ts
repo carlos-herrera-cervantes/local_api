@@ -1,4 +1,4 @@
-import { QueryParams } from './query-params.entity';
+import { QueryParamsListDto } from '../dto/base-list.dto';
 
 export interface IMongoDBFilter {
   sort: any,
@@ -20,7 +20,7 @@ export class MongoDBFilter {
 
   protected relation: string[];
 
-  constructor(private readonly queryParams: QueryParams) {}
+  constructor(private readonly queryParams: QueryParamsListDto) {}
 
   /**
    * Sets the properties to apply the sort
