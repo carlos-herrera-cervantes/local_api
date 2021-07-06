@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiConsumes,
-  ApiResponse,
+  ApiOkResponse,
   ApiTags,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
@@ -48,7 +48,7 @@ export class UsersController {
   ) {}
 
   @Get()
-  @ApiResponse({ type: ListAllDto, isArray: false, status: 200 })
+  @ApiOkResponse({ type: ListAllDto, isArray: false })
   @ApiForbiddenResponse({ description: 'Forbidden resource' })
   @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.SuperAdmin, Role.StationAdmin)
@@ -63,7 +63,7 @@ export class UsersController {
   }
 
   @Get('me')
-  @ApiResponse({ type: SingleUserDto, isArray: false, status: 200 })
+  @ApiOkResponse({ type: SingleUserDto, isArray: false })
   @ApiForbiddenResponse({ description: 'Forbidden resource' })
   @ApiInternalServerErrorResponse({ description: 'Server error' })
   @Roles(Role.All)
@@ -74,7 +74,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  @ApiResponse({ type: SingleUserDto, isArray: false, status: 200 })
+  @ApiOkResponse({ type: SingleUserDto, isArray: false })
   @ApiNotFoundResponse({ description: 'Resources not found' })
   @ApiForbiddenResponse({ description: 'Forbidden resource' })
   @ApiInternalServerErrorResponse({ description: 'Server error' })
@@ -85,7 +85,7 @@ export class UsersController {
   }
 
   @Post()
-  @ApiResponse({ type: SingleUserDto, isArray: false, status: 201 })
+  @ApiOkResponse({ type: SingleUserDto, isArray: false, status: 201 })
   @ApiUnprocessableEntityResponse({ description: 'Invalid model' })
   @ApiInternalServerErrorResponse({ description: 'Server error' })
   async createAsync(@Body() user: CreateUserDto): Promise<User> {
@@ -93,7 +93,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiResponse({ type: SingleUserDto, isArray: false, status: 200 })
+  @ApiOkResponse({ type: SingleUserDto, isArray: false })
   @ApiUnprocessableEntityResponse({ description: 'Invalid model' })
   @ApiNotFoundResponse({ description: 'Resources not found' })
   @ApiForbiddenResponse({ description: 'Forbidden resource' })
@@ -105,7 +105,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @ApiResponse({ isArray: false, status: 204, description: 'No content' })
+  @ApiOkResponse({ isArray: false, status: 204, description: 'No content' })
   @ApiNotFoundResponse({ description: 'Resources not found' })
   @ApiForbiddenResponse({ description: 'Forbidden resource' })
   @ApiInternalServerErrorResponse({ description: 'Server error' })
