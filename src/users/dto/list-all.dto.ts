@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Role } from "../../base/enums/role.enum";
 import { BaseListDto } from "../../base/dto/base-list.dto";
+import { SuccessResponseDto } from "../../base/dto/success-response.dto";
 
 export class SingleUserDto {
 
@@ -24,7 +25,7 @@ export class SingleUserDto {
 
 }
 
-export class ListAllDto extends BaseListDto {
+export class PartialAllDto extends BaseListDto {
 
   @ApiProperty({
     example: [
@@ -39,5 +40,12 @@ export class ListAllDto extends BaseListDto {
     ]
   })
   docs: SingleUserDto[];
+
+}
+
+export class ListAllDto extends SuccessResponseDto {
+
+  @ApiProperty()
+  data: PartialAllDto;
 
 }

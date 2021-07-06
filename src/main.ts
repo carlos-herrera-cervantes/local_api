@@ -11,6 +11,7 @@ async function bootstrap() {
     .setDescription('Documentation of services for Local Component')
     .setVersion('1.0')
     .addTag('local')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
